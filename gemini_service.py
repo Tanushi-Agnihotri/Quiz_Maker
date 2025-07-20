@@ -3,14 +3,15 @@ import logging
 import os
 from typing import Dict, List, Any
 
-from google import genai
-from google.genai import types
+# Use the older, compatible library
+import google.generativeai as genai
+from google.generativeai.types import GenerationConfig
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
-# Initialize Gemini client
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", "default_key"))
+# Configure the client
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY", "default_key"))
 
 class QuizQuestion(BaseModel):
     question: str
@@ -55,7 +56,7 @@ def generate_quiz_from_text(text: str) -> Dict[str, Any]:
 
 {text}
 
-Format your response as JSON with this exact structure:
+Format your response as a single, valid JSON object with this exact structure:
 {{
     "questions": [
         {{
@@ -72,18 +73,21 @@ Ensure all questions are based on the content provided and test comprehension of
 
         logger.info("Sending request to Gemini API for quiz generation")
         
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                types.Content(role="user", parts=[types.Part(text=user_prompt)])
-            ],
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                response_mime_type="application/json",
-                response_schema=QuizResponse,
-                temperature=0.7,
-                max_output_tokens=2048
-            ),
+        # Use the new model and configuration
+        model = genai.GenerativeModel(
+            model_name='gemini-1.5-flash',
+            system_instruction=system_prompt
+        )
+
+        generation_config = GenerationConfig(
+            response_mime_type="application/json",
+            temperature=0.7,
+            max_output_tokens=2048
+        )
+        
+        response = model.generate_content(
+            user_prompt,
+            generation_config=generation_config
         )
         
         if not response.text:
@@ -92,8 +96,11 @@ Ensure all questions are based on the content provided and test comprehension of
         logger.info("Received response from Gemini API")
         logger.debug(f"Raw response: {response.text}")
         
+        # Clean the response text to ensure it's valid JSON
+        cleaned_text = response.text.strip().replace('```json', '').replace('```', '')
+        
         # Parse the JSON response
-        quiz_data = json.loads(response.text)
+        quiz_data = json.loads(cleaned_text)
         
         # Validate the response structure
         if 'questions' not in quiz_data:
@@ -122,7 +129,7 @@ Ensure all questions are based on the content provided and test comprehension of
         
     except json.JSONDecodeError as e:
         logger.error(f"JSON parsing error: {str(e)}")
-        raise Exception(f"Failed to parse quiz response: {str(e)}")
+        raise Exception(f"Failed to parse quiz response: {response.text}")
     
     except Exception as e:
         logger.error(f"Quiz generation error: {str(e)}")
