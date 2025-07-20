@@ -17,15 +17,6 @@ logger = logging.getLogger(__name__)
 def extract_text_from_pdf(file_path: str) -> str:
     """
     Extract text from PDF file using pypdf
-    
-    Args:
-        file_path (str): Path to the PDF file
-        
-    Returns:
-        str: Extracted text
-        
-    Raises:
-        Exception: If extraction fails
     """
     if PdfReader is None:
         raise Exception("pypdf not available. Please install the pypdf package.")
@@ -55,15 +46,6 @@ def extract_text_from_pdf(file_path: str) -> str:
 def extract_text_from_docx(file_path: str) -> str:
     """
     Extract text from DOCX file using python-docx
-    
-    Args:
-        file_path (str): Path to the DOCX file
-        
-    Returns:
-        str: Extracted text
-        
-    Raises:
-        Exception: If extraction fails
     """
     if Document is None:
         raise Exception("python-docx not available. Please install python-docx package.")
@@ -75,14 +57,12 @@ def extract_text_from_docx(file_path: str) -> str:
         for paragraph in doc.paragraphs:
             text += paragraph.text + "\n"
         
-        # Also extract text from tables
         for table in doc.tables:
             for row in table.rows:
                 for cell in row.cells:
                     text += cell.text + " "
                 text += "\n"
         
-        # Clean up the text
         text = text.strip()
         
         if not text:
@@ -98,15 +78,6 @@ def extract_text_from_docx(file_path: str) -> str:
 def extract_text_from_file(file_path: str) -> str:
     """
     Extract text from file based on its extension
-    
-    Args:
-        file_path (str): Path to the file
-        
-    Returns:
-        str: Extracted text
-        
-    Raises:
-        Exception: If extraction fails or file type not supported
     """
     if not os.path.exists(file_path):
         raise Exception(f"File not found: {file_path}")
@@ -118,3 +89,24 @@ def extract_text_from_file(file_path: str) -> str:
             return extract_text_from_pdf(file_path)
         elif file_extension == '.docx':
             return extract_text_from_docx(file_path)
+        else:
+            raise Exception(f"Unsupported file type: {file_extension}")
+    
+    except Exception as e:
+        logger.error(f"File processing error for {file_path}: {str(e)}")
+        raise
+
+def get_file_info(file_path: str) -> dict:
+    """
+    Get basic information about a file
+    """
+    try:
+        stat = os.stat(file_path)
+        return {
+            'size': stat.st_size,
+            'extension': os.path.splitext(file_path)[1].lower(),
+            'name': os.path.basename(file_path)
+        }
+    except Exception as e:
+        logger.error(f"Error getting file info for {file_path}: {str(e)}")
+        return {}
