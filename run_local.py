@@ -22,9 +22,8 @@ def load_env_file():
                 if line and not line.startswith('#') and '=' in line:
                     key, value = line.split('=', 1)
                     os.environ[key.strip()] = value.strip()
-        print("Loaded environment variables from .env file")
-    else:
-        print("Warning: .env file not found. Please create one with your GEMINI_API_KEY")
+        
+
 
 def check_requirements():
     """Check if required packages are installed"""
@@ -54,17 +53,14 @@ def check_requirements():
             missing_packages.append(package)
     
     if missing_packages:
-        print(f"Missing packages: {', '.join(missing_packages)}")
-        print("Please install them using:")
-        print("pip install flask flask-cors google-genai pymupdf python-docx pydantic")
+
         return False
     
     return True
 
 def main():
     """Main function to start the local server"""
-    print("AI Quiz Generator - Local Development Server")
-    print("=" * 50)
+
     
     # Load environment variables
     load_env_file()
@@ -75,17 +71,13 @@ def main():
     
     # Check for API key
     if not os.environ.get('GEMINI_API_KEY'):
-        print("Error: GEMINI_API_KEY not found in environment variables")
-        print("Please add it to your .env file or set it as an environment variable")
+      
         sys.exit(1)
     
     # Import and run the Flask app
     try:
         from app import app
-        print("Starting Flask development server...")
-        print("Access the application at: http://localhost:5000")
-        print("Press Ctrl+C to stop the server")
-        print("-" * 50)
+
         
         app.run(
             host='0.0.0.0',
@@ -93,10 +85,8 @@ def main():
             debug=True,
             use_reloader=True
         )
-    except KeyboardInterrupt:
-        print("\nServer stopped by user")
     except Exception as e:
-        print(f"Error starting server: {e}")
+       
         sys.exit(1)
 
 if __name__ == '__main__':

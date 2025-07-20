@@ -18,9 +18,8 @@ def create_directories():
     for directory in directories:
         if not os.path.exists(directory):
             os.makedirs(directory)
-            print(f"Created directory: {directory}")
-        else:
-            print(f"Directory already exists: {directory}")
+           
+
 
 def create_env_file():
     """Create .env file from example if it doesn't exist"""
@@ -28,8 +27,7 @@ def create_env_file():
         if os.path.exists('.env.example'):
             import shutil
             shutil.copy('.env.example', '.env')
-            print("Created .env file from .env.example")
-            print("Please edit .env file and add your GEMINI_API_KEY")
+
         else:
             with open('.env', 'w') as f:
                 f.write("""# Google Gemini API Configuration
@@ -42,10 +40,6 @@ SESSION_SECRET=your_secure_session_secret_here
 FLASK_ENV=development
 FLASK_DEBUG=True
 """)
-            print("Created .env file")
-            print("Please edit .env file and add your GEMINI_API_KEY")
-    else:
-        print(".env file already exists")
 
 def install_requirements():
     """Install required packages"""
@@ -58,16 +52,15 @@ def install_requirements():
         'pydantic==2.5.2',
         'werkzeug==3.0.1'
     ]
-    
-    print("Installing required packages...")
+   
     for package in packages:
         os.system(f'pip install {package}')
     
-    print("All packages installed!")
+
 
 def main():
     """Main setup function"""
-    print("Setting up AI Quiz Generator for local development...")
+
     
     create_directories()
     create_env_file()
@@ -75,11 +68,6 @@ def main():
     if '--install-deps' in sys.argv:
         install_requirements()
     
-    print("\nSetup complete!")
-    print("\nNext steps:")
-    print("1. Edit .env file and add your GEMINI_API_KEY")
-    print("2. Run: python main.py")
-    print("3. Open http://localhost:5000 in your browser")
 
 if __name__ == '__main__':
     main()
