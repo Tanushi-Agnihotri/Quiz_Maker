@@ -3,9 +3,9 @@ import logging
 from typing import Optional
 
 try:
-    import fitz  # PyMuPDF
+    from pypdf import PdfReader
 except ImportError:
-    fitz = None
+    PdfReader = None
 
 try:
     from docx import Document
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def extract_text_from_pdf(file_path: str) -> str:
     """
-    Extract text from PDF file using PyMuPDF
+    Extract text from PDF file using pypdf
     
     Args:
         file_path (str): Path to the PDF file
@@ -27,21 +27,18 @@ def extract_text_from_pdf(file_path: str) -> str:
     Raises:
         Exception: If extraction fails
     """
-    if fitz is None:
-        raise Exception("PyMuPDF not available. Please install pymupdf package.")
+    if PdfReader is None:
+        raise Exception("pypdf not available. Please install the pypdf package.")
     
     try:
         text = ""
-        doc = fitz.open(file_path)
+        reader = PdfReader(file_path)
         
-        for page_num in range(len(doc)):
-            page = doc.load_page(page_num)
-            page_text = page.get_text()
-            text += page_text + "\n"
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
         
-        doc.close()
-        
-        # Clean up the text
         text = text.strip()
         
         if not text:
@@ -53,6 +50,7 @@ def extract_text_from_pdf(file_path: str) -> str:
     except Exception as e:
         logger.error(f"PDF extraction error: {str(e)}")
         raise Exception(f"Failed to extract text from PDF: {str(e)}")
+
 
 def extract_text_from_docx(file_path: str) -> str:
     """
@@ -120,30 +118,3 @@ def extract_text_from_file(file_path: str) -> str:
             return extract_text_from_pdf(file_path)
         elif file_extension == '.docx':
             return extract_text_from_docx(file_path)
-        else:
-            raise Exception(f"Unsupported file type: {file_extension}")
-    
-    except Exception as e:
-        logger.error(f"File processing error for {file_path}: {str(e)}")
-        raise
-
-def get_file_info(file_path: str) -> dict:
-    """
-    Get basic information about a file
-    
-    Args:
-        file_path (str): Path to the file
-        
-    Returns:
-        dict: File information
-    """
-    try:
-        stat = os.stat(file_path)
-        return {
-            'size': stat.st_size,
-            'extension': os.path.splitext(file_path)[1].lower(),
-            'name': os.path.basename(file_path)
-        }
-    except Exception as e:
-        logger.error(f"Error getting file info for {file_path}: {str(e)}")
-        return {}
